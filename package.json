@@ -1,0 +1,32 @@
+{
+  "name": "ray-tower",
+  "version": "1.0.0",
+  "description": "A NodeJS based library to create ray-towers for ray-net. Under-development!",
+  "main": "ray-tower.js",
+  "scripts": {
+    "test": "node tests/mainTest.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ray6464/ray-tower.git"
+  },
+  "keywords": [
+    "tower",
+    "ping",
+    "ray-net",
+    "ray-userland"
+  ],
+  "author": "Ray-Voice, Anna-Voice, Alina-Voice",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Ray6464/ray-tower/issues"
+  },
+  "homepage": "https://github.com/Ray6464/ray-tower#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "node-fetch": "^2.6.1",
+    "ray-flags": "^0.0.7",
+    "ray-fs": "^2.2.1",
+    "sucide": "^1.0.1"
+  }
+}

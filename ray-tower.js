@@ -33,13 +33,14 @@ else if (flags.pair | false) {
   homocide(flags.N, "Please provide the Name of the new Tower!");
   homocide(flags.ip,"Please provide the IP of the new Tower!");
   homocide(flags.p, "Please provide the IP of the new Tower!");
-  const newTower = { name: flags.N, ip: flags.ip, port: flags.p }
+  homocide(flags.protocol, "Please provide the protocol supported by the new Tower!");
+  const newTower = { name: flags.N, ip: flags.ip, port: flags.p, protocol: flags.protocol + ":" }
 
   if (!fs.exists(towerFile).value) {sucide(`No ${towerFile} file exists!`)}
   function modJSON(json) {
     if (typeof(json) === undefined) {sucide(`${towerFile} is curropted!`)};
     if (json.towers === undefined) json.towers = [];
-    json.towers.push({name: newTower.name, ip:newTower.ip, port: newTower.port});
+    json.towers.push(newTower);
     return json;
   }
   fs.updateJSON(towerFile, modJSON);
@@ -78,6 +79,7 @@ else if (flags.boot){
       requestStatus: "Your request is in Process.",
       accessTowerNode: "/fetch/" + requestedResourceURI
     }
+    pingAllTowers(pairedTowers, breadCrumbs, requestedResource);
     
     // status code 202 means request accepted for later processing since it will take time for a file to download.
     res.status(202).send(responseObject);
@@ -95,5 +97,28 @@ else if (flags.boot){
   });
 
   app.listen(towerConfig.TOWER_PORT);
+}
+
+function pingAllTowers(pairedTowers, breadCrumbs, requestedResource) {
+  const fetch = require('node-fetch');
+  if (pairedTowers.towers === undefined) pairedTowers.towers = [];
+  for (let tower of pairedTowers.towers){
+    const {ip, port, protocol} = tower; // add a way go get protocols too
+
+    const requestObject = {
+      breadCrumbs: breadCrumbs,
+      requestedResource: requestedResource
+    }
+    const requestURL = protocol + "//" + ip + ":" + port + "/request/" + JSON.stringify(requestObject);
+    console.log("My Request:"+ requestURL);
+    fetch(requestURL)
+      .then( res => res.json())
+      .then(json => {
+        console.log(json);
+      })
+      .catch(err => {
+        console.log(err);
+      });
+  }
 }
 

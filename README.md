@@ -20,9 +20,9 @@ It is recommanded to add a tower info to your `config.json` file.
 
 To pair your tower with another tower use:
 ```
-ray-tower -pair -N "new tower name" -ip 192.168.1.114 -p 4002
+ray-tower -pair -N "new tower name" -ip 192.168.1.114 -p 4002 -protocol http
 ```
-You can also display paired towers by using the `-public` flag in this command.
+You can also display paired towers to other users by using the `-public` flag in this command. Info for your tower will be available at the root node.
 
 # Usage
 Start your tower with:

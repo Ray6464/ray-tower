@@ -2,15 +2,16 @@
 
 const { sucide, murder, homocide } = require('sucide');
 const flags = require('ray-flags');
+const path = require('path');
+
 // Parsing and Utilizing Arguments Vector
 const port = +flags.p | 5432; // port flag
-const init = flags.init | false;
-const pairTower = flags.pair | false;
 
 const version = "v0.0.1";
+const resourceDir = 'requestedResources';
 
 if (flags.v) {sucide(version)}
-else if (init) {
+else if (flags.init | false) {
   const fs = Object.assign({}, require('ray-fs'));
   if (flags.N == undefined) {sucide("Please provide the Name of the Tower!")}
   if (flags.V == undefined) {sucide("Please provide the Version of the Tower!")}
@@ -25,7 +26,7 @@ else if (init) {
   fs.writeJSON('towers.json', { TOWER_NAME: flags.N, TOWER_VERSION: flags.V });
   sucide("Ray-Tower Initialized!");
 }
-else if (pairTower) {
+else if (flags.pair | false) {
   const fs = Object.assign({}, require('ray-fs'));
   const towerFile = 'towers.json';
   const configFile = 'config.json';
@@ -45,7 +46,7 @@ else if (pairTower) {
   if (flags.public | false) fs.updateJSON(configFile, modJSON);
   sucide("New Tower paired!");
 }
-else {
+else if (flags.boot){
 
   // start coding here
   const express = require('express');
@@ -53,20 +54,46 @@ else {
   const fetch = require('node-fetch');
   const path = require('path');
   const fs = Object.assign({}, require('ray-fs'));
+//  const hash = require('ray-hash'); // Use later for PGP
 
-  app.get('/', (req, res)=>{
+  fs.initDir(resourceDir); 
+
+  const towerConfig = fs.readJSON('config.json').value;
+  const pairedTowers = fs.readJSON('towers.json').value;
+
+  app.get('/', (req, res)=>{ // Get tower info
     res.sendFile(path.join(process.cwd(), 'config.json'));
   });
 
-//const config = fs.readJSON(flags.c).value;
+  app.get('/request/:requestObject', (req, res)=>{ // Send Data to related towers
+    const {breadCrumbs, requestedResource} = JSON.parse(req.params.requestObject);
+    const requestedResourceURI = breadCrumbs[0] + '//' + breadCrumbs.slice(1).join('/');
 
-/* Sample config.json
-  {
-    name: "Anymans Tower Global",
-    version: "v1.0.2"
-  }
-*/
+    (async function() {
+      let response = await fetch(requestedResourceURI);
+      fs.stream(response.body, path.join(resourceDir,requestedResource));
+    })();
 
-app.listen(port);
+    const responseObject = {
+      requestStatus: "Your request is in Process.",
+      accessTowerNode: "/fetch/" + requestedResourceURI
+    }
+    
+    // status code 202 means request accepted for later processing since it will take time for a file to download.
+    res.status(202).send(responseObject);
+  });
+
+  app.get('/fetch/:responseObject', (req, res)=>{ // Send Data to related towers 
+    const responseObject = JSON.parse(req.params.responseObject);
+    console.log(responseObject);
+    const fileOnTower = path.join(resourceDir, responseObject.file);
+    if (fs.exists(fileOnTower).value) {
+      res.sendFile(path.join(process.cwd(), fileOnTower));
+    } else {
+      res.status(404);
+    }
+  });
+
+  app.listen(towerConfig.TOWER_PORT);
 }
 

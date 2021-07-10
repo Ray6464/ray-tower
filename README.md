@@ -29,32 +29,57 @@ Start your tower with:
 ```
 ray-tower -boot
 ```
-Now suppose that this tower is named "Ray-Tower 1" and it is listening at `192.168.1.112:3001`.
-Similarly, suppose that another tower is running, named "Ray-Tower 2" and it is listening at `192.168.1.112:3002`.
-Finally, suppose that another server named "JohnDoe-VideoHost" is listening at `192.168.1.112:3030` and it has a video file available for download at URL `192.168.1.112:3030/file.mp4`.
-Now, we can use another machiene named "JohnDoe-desktop" can make a request at `192.168.1.112:3030/file.mp4` bouncing it off "Ray-Tower 1" and "Ray-Tower 2".
-The request can be to `fetch` data from "JohnDoe-VideoHost", by passing it through a network of tower. For example:
+Now suppose that this tower is named "Ray-Tower 1" and it is listening at `192.168.1.114:3001` or `www.example-tower1.com`.
+Similarly, suppose that another tower is running, named "Ray-Tower 2" and it is listening at `192.168.1.109:3002` or `www.example-tower2.com`.
+Now, suppose that another server named "JohnDoe-VideoHost" is listening at `192.168.1.118:3030` or `www.exampleJohnDoe-VideoHost.com` and it has a video file available for download at URL `192.168.1.118:3030/file.mp4` or `www.exampleJohnDoe-VideoHost.com/file.mp4`.
+Now, we can use another computer named "JaneDoe-desktop" to make a request at `192.168.1.118:3030/file.mp4`, bouncing the request off "Ray-Tower 1", and "Ray-Tower 2".
+The request can `fetch` data from "JohnDoe-VideoHost", by passing it through a network of towers. For example:
 ```javascript
-// This code runs on "JohnDoe-Desktop"
-const url = "http://localhost:3001/request/{"breadCrumbs" : ["http:", "localhost:3030", "file1.mp4" ]}";
-fetch(url)
-  .then(res=> res.json())
+const fetch = require('node-fetch');
+const fileName = 'file1.mp4';
+
+const requestObject = {
+  breadCrumbs: ['http:', 'localhost:3030', fileName],
+  requestedResource: fileName,
+}
+
+fetch("http://192.168.1.114:3001/request/" + JSON.stringify(requestObject))
+  .then( res => res.json())
   .then(json => {
     console.log(json);
   })
-```
-In this example we are `priming` the Ray-Tower at `192.168.1.112:3001` to fetch data from the URL `192.168.1.112:3030/file.mp4`, then make it available for download at `192.168.1.112:3001/fetch/192.168.1.112:3030/file.mp4`.
-Once available we can use the following code to access it.
-```javascript
-// This code runs on "JohnDoe-Desktop"
-const fs = Object.assign({}, require('ray-fs'));
-
-fetch(`http://192.168.1.112:3001/fetch/192.168.1.112:3002/file.mp4"`)
-  .then(res => {
-    fs.stream(res.body, "file.mp4");
+  .catch(err => {
+    console.log(err);
   });
 ```
-It "Ray-Tower 1" is paired to "Ray-Tower 2", then "Ray-Tower 1" will bounce the signal one more time, passing it through "Ray-Tower 2" before the fetch request eventually reaches "JohnDoe-VideoHost".
+In this example we are making a request to the Ray-Tower at `192.168.1.114:3001` to fetch data from the URL `192.168.1.118:3030/file.mp4`, then make it available for download at `192.168.1.114:3001/fetch/192.168.1.118:3030/file.mp4`.
+Once the Tower is done processing this request then we can use the following code to access it. The time it takes to process a request may vary. Once the file is available we can use the following code to download it form the Tower at `192.168.1.114:3001`.
+```javascript
+// This code runs on "JaneDoe-Desktop"
+const fetch = require('node-fetch');
+const fs = Object.assign({}, require('ray-fs'));
+const {sucide} = require('sucide');
+
+const fileName = 'file1.mp4';
+const responseObject = {
+  file: fileName,
+}
+
+fetch("http://192.168.1.114:3001/fetch/" + JSON.stringify(responseObject))
+  .then((res) => {
+    if (res.status != 404) return res.body;
+    if (res.status == 404) sucide("Requested Resource not found!");
+  })
+  .then(body => {
+    fs.stream(body, fileName);
+  })
+  .catch(err => {
+    console.log(err);
+  });
+```
+If "Ray-Tower 1" is paired to "Ray-Tower 2" then "Ray-Tower 1" will bounce the signal one more time, passing it through "Ray-Tower 2" before the fetch request eventually reaches "JohnDoe-VideoHost".
+
+You can also use the "Ray-Fetch" utility from NPM to make requests to a Ray-Tower Instance from the command-line. Use `npm i -g ray-fetch`.
 
 # LICENSE
 MIT License

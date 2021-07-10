@@ -1,8 +1,8 @@
 {
   "name": "ray-tower",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "description": "A NodeJS program to create a Ray-Net tower. A Ray-Tower is just a server that bounces the signal of a request to all paired towers in its network. This progect will eventually use PGP to encrypt communication. Also, a Ray-Tower keeps no records of the requests made through it! A Sharding protocol using Slice-Net will also be implemented!",
-  "main": "ray-tower.js",
+  "main": "ray-tower.min.js",
   "scripts": {
     "test": "node tests/mainTest.js"
   },

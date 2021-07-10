@@ -7,7 +7,7 @@ const path = require('path');
 // Parsing and Utilizing Arguments Vector
 const port = +flags.p | 5432; // port flag
 
-const version = "v0.0.1";
+const version = "v1.0.2";
 const resourceDir = 'requestedResources';
 
 if (flags.v) {sucide(version)}
